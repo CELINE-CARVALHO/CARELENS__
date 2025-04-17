@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prescription OCR Results</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #e0f7fa, #e3f2fd);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+        }
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            animation: fadeIn 0.7s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            text-align: center;
+            color: #1565c0;
+            border-bottom: 2px solid #64b5f6;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            font-size: 1.4em;
+            color: #0d47a1;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #90caf9;
+            padding-bottom: 5px;
+        }
+        .section p, .section li {
+            margin: 6px 0;
+            line-height: 1.6;
+        }
+        .medication {
+            background: #e3f2fd;
+            padding: 15px;
+            border-left: 5px solid #42a5f5;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s ease;
+        }
+        .medication:hover {
+            box-shadow: 0 4px 12px rgba(66,165,245,0.3);
+        }
+        .med-title {
+            font-weight: bold;
+            color: #0d47a1;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .med-info {
+            margin-top: 12px;
+            border-top: 1px dashed #90caf9;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Prescription Details</h1>
+
+        <div class="section">
+            <h2>Patient Information</h2>
+            <p><strong>Name:</strong> {{ data.patient_name }}</p>
+            <p><strong>Age:</strong> {{ data.patient_age }}</p>
+            <p><strong>Gender:</strong> {{ data.patient_gender }}</p>
+        </div>
+
+        <div class="section">
+            <h2>Doctor Information</h2>
+            <p><strong>Name:</strong> {{ data.doctor_name }}</p>
+            <p><strong>License:</strong> {{ data.doctor_license }}</p>
+            <p><strong>Date:</strong> {{ data.prescription_date }}</p>
+        </div>
+
+        <div class="section">
+            <h2>Medications</h2>
+            {% for med in data.medications %}
+            <div class="medication">
+                <div class="med-title">{{ med.name }}</div>
+                <div class="med-info">
+                    <p><strong>Dosage:</strong> {{ med.dosage }}</p>
+                    <p><strong>Frequency:</strong> {{ med.frequency }}</p>
+                    <p><strong>Duration:</strong> {{ med.duration }}</p>
+                    <p><strong>Information:</strong> {{ med.information }}</p>
+                    <p><strong>Uses:</strong> {{ med.uses }}</p>
+                    <p><strong>Side Effects:</strong> {{ med.side_effects }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="section">
+            <h2>Notes</h2>
+            <ul>
+                {% for note in data.notes %}
+                <li>{{ note }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CareLens - AI Healthcare</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+  <script src="{{ url_for('static', filename='js/index.js') }}" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar Navigation -->
+<div class="sidebar-modern" id="sidebar">
+  <div class="sidebar-header">
+    <h2>CareLens</h2>
+    <span class="close-btn" onclick="toggleSidebar()">&times;</span>
+  </div>
+  <nav class="sidebar-links">
+    <a href="#features"><i class="fas fa-cogs"></i> Features</a>
+    <a href="#benefits"><i class="fas fa-star"></i> Benefits</a>
+    <a href="#faq"><i class="fas fa-question-circle"></i> Q&A</a>
+    <a href="#collab"><i class="fas fa-users"></i> Collaboration</a>
+    <a href="#contact"><i class="fas fa-envelope"></i> Contact</a>
+  </nav>
+</div>
+
+<header>
+  <div class="logo">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="CareLens Logo" class="logo-img" />
+    CareLens
+  </div>
+  <nav>
+    <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+    <button id="darkModeToggle"><i class="fas fa-moon"></i></button>
+  </nav>
+</header>
+
+<section class="hero">
+  <img src="{{ url_for('static', filename='images/background.jpg') }}" alt="Doctor AI" class="hero-bg" />
+  <div class="overlay">
+    <div class="hero-content">
+      <h2><i class="fas fa-microchip"></i> Transforming Healthcare</h2>
+      <h1>Empowering Health with <span class="highlight">AI-Driven</span> Intelligence</h1>
+      <p>CareLens combines AI with expert medical insights to deliver personalized, accessible, and instant health support.</p>
+      <ul>
+        <li><i class="fas fa-check-circle"></i> Skin Disease Classification</li>
+        <li><i class="fas fa-check-circle"></i> Prescription Translator</li>
+        <li><i class="fas fa-check-circle"></i> AI Pain Mapping</li>
+        <li><i class="fas fa-check-circle"></i> Live Consultations</li>
+        <li><i class="fas fa-check-circle"></i> Drug Interaction Checks</li>
+      </ul>
+      <button class="cta">Talk to Us</button>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="features reveal">
+  <h2><i class="fas fa-cogs"></i> Key Features</h2>
+  <div class="feature-grid">
+    <a href="{{ url_for('prescription') }}" class="card">
+      <img src="{{ url_for('static', filename='images/precription.jpeg') }}" alt="Prescription" />
+      <h3>Prescription Analysis</h3>
+      <p>Scan and translate prescriptions in multiple languages.</p>
+    </a>
+    <a href="{{ url_for('skin_upload_page') }}" class="card">
+      <img src="{{ url_for('static', filename='images/skin.jpeg') }}" alt="Skin" />
+      <h3>Skin Condition Detection</h3>
+      <p>Upload images and get instant classification of conditions.</p>
+    </a>
+    <a href="{{ url_for('pain_mapping') }}" class="card">
+      <img src="{{ url_for('static', filename='images/pain_map.jpeg') }}" alt="pain_mapping"/>
+      <h3>Pain Mapping</h3>
+      <p>Interactive diagram for pinpointing pain with AI insights.</p>
+    </a>
+  </div>
+</section>
+
+
+<section id="benefits" class="benefits reveal">
+  <h2><i class="fas fa-star"></i> Why Choose CareLens?</h2>
+  <div class="benefits-content">
+    <img src="{{ url_for('static', filename='images/benifits.jpeg') }}" alt="Healthcare" class="benefits-img" />
+    <div class="benefit-text">
+      <div class="benefit-item"><i class="fas fa-brain"></i> Understands symptoms & translates care into simple terms.</div>
+      <div class="benefit-item"><i class="fas fa-handshake"></i> Connects with multilingual doctors globally.</div>
+      <div class="benefit-item"><i class="fas fa-database"></i> Tracks your health history securely.</div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="faq reveal">
+  <h2><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
+  <div class="faq-container">
+    <div class="faq-item">
+      <h4><i class="fas fa-info-circle"></i> What is CareLens?</h4>
+      <p>An AI platform that helps in diagnosis, prescription reading, and live doctor connections.</p>
+    </div>
+    <div class="faq-item">
+      <h4><i class="fas fa-bolt"></i> How accurate is it?</h4>
+      <p>Backed by clinical data and learning models. Human confirmation is encouraged.</p>
+    </div>
+    <div class="faq-item">
+      <h4><i class="fas fa-lock"></i> Is my data safe?</h4>
+      <p>Yes! Your health data is encrypted and confidential.</p>
+    </div>
+  </div>
+</section>
+
+<section id="collab" class="collab reveal">
+  <h2><i class="fas fa-users"></i> Collaboration</h2>
+  <p>We’re working with hospitals, researchers, and developers. Join us in transforming healthcare.</p>
+  <button class="cta">Collaborate Now</button>
+</section>
+
+<section id="contact" class="contact reveal">
+  <h2><i class="fas fa-envelope"></i> Contact Us</h2>
+  <form id="contactForm">
+    <input type="text" placeholder="Your Name" required />
+    <input type="email" placeholder="Email Address" required />
+    <textarea rows="5" placeholder="Your Message" required></textarea>
+    <button type="submit"><i class="fas fa-paper-plane"></i> Send</button>
+  </form>
+</section>
+
+<footer>
+  <div class="footer-links">
+    <strong>Quick Links</strong>
+    <a href="#features"><i class="fas fa-toolbox"></i> Features</a>
+    <a href="#faq"><i class="fas fa-question"></i> FAQs</a>
+    <a href="#collab"><i class="fas fa-handshake"></i> Collaboration</a>
+    <a href="#contact"><i class="fas fa-phone-alt"></i> Contact</a>
+  </div>
+  <p>© 2025 CareLens. All Rights Reserved.</p>
+</footer>
+
+</body>
+</html>
