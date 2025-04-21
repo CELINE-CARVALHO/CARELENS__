@@ -1,0 +1,13 @@
+Flask==2.2.5
+flask-cors==3.1.1
+pytesseract==0.3.10
+easyocr==1.7.1
+python-dotenv==1.0.1
+neo4j==5.19.0
+py2neo==2021.2.4
+Pillow==9.5.0
+wikipedia==1.4.0
+deep-translator==1.11.4
+roboflow==0.2.27
+Werkzeug==2.2.3
+https://huggingface.co/allenai/scispacy_models/resolve/main/en_core_sci_sm-0.5.1.tar.gz

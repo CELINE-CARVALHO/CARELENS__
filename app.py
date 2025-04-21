@@ -1,254 +1,331 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-from flask_cors import CORS
+from flask import Flask, render_template, request, session
+import pytesseract
+import roboflow
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
+from neo4j import GraphDatabase
 from dotenv import load_dotenv
 import os
-import uuid
-import pytesseract
-from PIL import Image
+import easyocr
+from flask import Flask, render_template, request, redirect, url_for
+import easyocr
+from deep_translator import GoogleTranslator
+from py2neo import Graph, Node
+from PIL import Image, ImageEnhance
+import wikipedia
 import re
-from datetime import datetime
-from neo4j import GraphDatabase, basic_auth
-from neo4j import GraphDatabase
-import torch
-from transformers import ViTForImageClassification, ViTImageProcessor
-from PIL import Image
 import os
 from flask import Flask, render_template, request, redirect, url_for, session
+##from roboflow import InferenceHTTPClient
+import os
+from werkzeug.utils import secure_filename
+from neo4j import GraphDatabase
+from roboflow import Roboflow
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from neo4j import GraphDatabase
+import os
+from werkzeug.utils import secure_filename
+from roboflow import Roboflow
 
-# Load environment variables
+
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+reader = easyocr.Reader(['en'])
+
+# Connect to Neo4j Database
+graph = Graph("bolt://localhost:7687", auth=("neo4j", "the8@21052005"))
+# ─── Load environment variables ────────────────────────────────────────────────
 load_dotenv()
 
-# Initialize Flask app
 app = Flask(__name__)
 CORS(app)
-
-import os
 app.secret_key = os.urandom(24)
-# Upload folder setup
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# ─── Upload folder setup ───────────────────────────────────────────────────────
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'bmp', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
-
-# Configure Neo4j
-neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-neo4j_user = os.getenv("NEO4J_USER", "neo4j")
-neo4j_password = os.getenv("NEO4J_PASSWORD", "the8@21052005")
-driver = GraphDatabase.driver(neo4j_uri, auth=basic_auth(neo4j_user, neo4j_password))
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
-# Helper Functions
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
-def store_prescription_data(data):
-    try:
-        with driver.session() as session:
-            query = """
-                CREATE (p:Prescription {
-                    PrescriptionID: $PrescriptionID,
-                    OriginalText: $OriginalText,
-                    TranslatedText: $TranslatedText
-                })
-            """
-            session.run(query, data)
-        return True
-    except Exception as e:
-        print("Error storing data in Neo4j:", e)
-        return False
-
-
-def ocr_prescription(filepath):
-    try:
-        image = Image.open(filepath)
-        raw_text = pytesseract.image_to_string(image)
-        return parse_prescription(raw_text)
-    except Exception as e:
-        return {"error": str(e)}
-
-
-def parse_prescription(raw_text):
-    data = {
-        "patient_name": "Not available",
-        "patient_age": "Not available",
-        "patient_gender": "Not available",
-        "doctor_name": "Not available",
-        "doctor_license": "Not available",
-        "prescription_date": "Not available",
-        "medications": [],
-        "notes": []
-    }
-
-    lines = raw_text.split('\n')
-    for line in lines:
-        clean_line = line.strip()
-
-        if re.search(r'\bPatient\b', clean_line, re.IGNORECASE):
-            data['patient_name'] = re.sub(r'Patient[:\s]*', '', clean_line, flags=re.IGNORECASE).strip()
-
-        age_match = re.search(r'(\d+)\s*(?:y|yrs|years)?', clean_line, re.IGNORECASE)
-        if age_match:
-            data['patient_age'] = age_match.group(1)
-
-        gender_match = re.search(r'\b(Male|Female|Other)\b', clean_line, re.IGNORECASE)
-        if gender_match:
-            data['patient_gender'] = gender_match.group(1).capitalize()
-
-        if re.search(r'\bDoctor\b', clean_line, re.IGNORECASE):
-            data['doctor_name'] = re.sub(r'Doctor[:\s]*', '', clean_line, flags=re.IGNORECASE).strip()
-
-        if re.search(r'License\s*No[:\s]*', clean_line, re.IGNORECASE):
-            data['doctor_license'] = re.sub(r'License\s*No[:\s]*', '', clean_line, flags=re.IGNORECASE).strip()
-
-        date_match = re.search(r'(\d{4}-\d{2}-\d{2})', clean_line)
-        if date_match:
-            try:
-                datetime.strptime(date_match.group(1), '%Y-%m-%d')
-                data['prescription_date'] = date_match.group(1)
-            except ValueError:
-                pass
-
-        if any(keyword in clean_line.lower() for keyword in ["mg", "tablet", "capsule"]):
-            med_parts = re.split(r',|;', clean_line)
-            med_data = {
-                "name": med_parts[0].strip() if len(med_parts) > 0 else "Unknown",
-                "dosage": med_parts[1].strip() if len(med_parts) > 1 else "Unknown",
-                "frequency": med_parts[2].strip() if len(med_parts) > 2 else "Unknown",
-                "duration": med_parts[3].strip() if len(med_parts) > 3 else "Unknown",
-                "information": med_parts[4].strip() if len(med_parts) > 4 else "Unknown",
-                "uses": med_parts[5].strip() if len(med_parts) > 5 else "Unknown",
-                "side_effects": med_parts[6].strip() if len(med_parts) > 6 else "Unknown"
-            }
-            data['medications'].append(med_data)
-        elif clean_line and not any(keyword in clean_line.lower() for keyword in ['patient', 'doctor', 'license', 'mg', 'tablet', 'capsule', 'date']):
-            data['notes'].append(f"- {clean_line}")
-
-    return data
-
-
-# Routes
+# ─── Routes ────────────────────────────────────────────────────────────────────
 @app.route('/')
 def home():
     return render_template('index.html')
 
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204  # Return an empty response for favicon requests
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part in the request'}), 400
+# ─── Prescription Routes ────────────────────────────────────────────────────────────────────
+@app.route('/upload_prescription')
+def upload_prescription():
+    return render_template('upload_prescription.html')
 
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
+def enhance_image(image_path):
+    image = Image.open(image_path)
+    enhancer = ImageEnhance.Contrast(image)
+    enhanced = enhancer.enhance(2)  # Increase contrast
+    enhanced.save(image_path)
 
-    if file and allowed_file(file.filename):
-        filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        try:
-            file.save(filepath)
-            extracted_data = ocr_prescription(filepath)
-            prescription_id = str(uuid.uuid4())
-            
-            # Store extracted data in Neo4j
-            store_prescription_data({
-                "PrescriptionID": prescription_id,
-                "OriginalText": extracted_data.get("raw_text", ""),
-                "TranslatedText": extracted_data.get("translated_text", "")
-            })
-            
-            # Redirect to the result page with the extracted data
-            return redirect(url_for('result_page', 
-                                    prescription_id=prescription_id,
-                                    patient_name=extracted_data['patient_name'],
-                                    patient_age=extracted_data['patient_age'],
-                                    patient_gender=extracted_data['patient_gender'],
-                                    prescription_date=extracted_data['prescription_date']))
-        except Exception as e:
-            return jsonify({'error': 'Error processing the image', 'details': str(e)}), 500
-    else:
-        return jsonify({'error': 'Invalid file type. Allowed types: png, jpg, jpeg, gif, bmp'}), 400
+# Get Medicine Info from Wikipedia
+def get_medicine_info(medicine_name):
+    try:
+        summary = wikipedia.summary(medicine_name, sentences=3)
+        return {
+            "information": summary,
+            "uses": "Refer to Wikipedia summary.",
+            "side_effects": "Refer to Wikipedia summary."
+        }
+    except:
+        return {
+            "information": f"No reliable information found for {medicine_name}.",
+            "uses": "Not available.",
+            "side_effects": "Not available."
+        }
 
+@app.route('/process_prescription', methods=['POST'])
+def process_prescription():
+    if 'image' not in request.files:
+        return "No file uploaded.", 400
 
-@app.route('/result/<prescription_id>', methods=['GET'])
-def result_page(prescription_id):
-    # Get the data from the URL query parameters
-    patient_name = request.args.get('patient_name', 'Not Available')
-    patient_age = request.args.get('patient_age', 'Not Available')
-    patient_gender = request.args.get('patient_gender', 'Not Available')
-    prescription_date = request.args.get('prescription_date', 'Not Available')
+    image = request.files['image']
+    upload_path = os.path.join('static/uploads', image.filename)
+    image.save(upload_path)
 
+    enhance_image(upload_path)  # Preprocess the image
+
+    extracted_text = pytesseract.image_to_string(Image.open(upload_path))
+
+    translated_text = GoogleTranslator(source='auto', target='en').translate(extracted_text)
+
+    # Extract Information
     data = {
-        'PrescriptionID': prescription_id,
-        'patient_name': patient_name,
-        'patient_age': patient_age,
-        'patient_gender': patient_gender,
-        'prescription_date': prescription_date,
-        'medicines': [],  # Populate with actual medicines data if available
-        'diagnosis': ''   # Replace with actual diagnosis if available
+        "patient_name": re.search(r'Patient[:\- ]*(.*)', extracted_text, re.IGNORECASE),
+        "patient_age": re.search(r'Age[:\- ]*([\d]+)', extracted_text, re.IGNORECASE),
+        "patient_gender": re.search(r'Gender[:\- ]*(Male|Female|Other)', extracted_text, re.IGNORECASE),
+        "doctor_name": re.search(r'Dr\.?\s*(.*)', extracted_text),
+        "doctor_license": re.search(r'License[:\- ]*(\S+)', extracted_text, re.IGNORECASE),
+        "prescription_date": re.search(r'\b(\d{4}[-/]\d{2}[-/]\d{2})\b', extracted_text),
+        "medications": [],
+        "additional_notes": []
     }
-    return render_template('result.html', data=data)
+
+    # Clean extracted fields
+    for key, match in data.items():
+        if isinstance(match, re.Match):
+            data[key] = match.group(1).strip()
+        elif match is None and key not in ["medications", "additional_notes"]:
+            data[key] = "Not available"
+
+    # Dummy medicine extraction logic
+    meds = re.findall(r'\b([A-Z][a-z]+)\b\s+(\d+mg)', extracted_text)
+    for med_name, dosage in meds:
+        med_info = get_medicine_info(med_name)
+        data["medications"].append({
+            "medication_name": med_name,
+            "dosage": dosage,
+            "frequency": "Not available",
+            "duration": "Not available",
+            "information": med_info["information"],
+            "uses": med_info["uses"],
+            "side_effects": med_info["side_effects"]
+        })
+
+    # Dummy additional notes
+    notes = re.findall(r'Note[:\- ]*(.+)', extracted_text, re.IGNORECASE)
+    if notes:
+        data["additional_notes"] = [f"- {note.strip()}" for note in notes]
+    else:
+        data["additional_notes"] = ["- No additional instructions available."]
+
+    # Store in Neo4j
+    try:
+        prescription_node = Node("Prescription",
+                                 original_text=extracted_text,
+                                 translated_text=translated_text,
+                                 structured_data=str(data))
+        graph.create(prescription_node)
+        status_message = "✅ Successfully stored in the database."
+    except Exception as e:
+        status_message = f"❌ Failed to store in Neo4j: {e}"
+
+    return render_template('prescription_result.html',
+                           data=data,
+                           status_message=status_message)
+# ─── Skin Routes ──────────────────────────────────────────────────────────────────────
+
+UPLOAD_FOLDER = 'static/uploads/'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Neo4j Setup
+neo4j_uri = "bolt://localhost:7687"
+neo4j_user = "neo4j"
+neo4j_password = "the8@21052005"
+driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password))
+
+# Roboflow Setup
+rf = Roboflow(api_key="eNNQh2V5u1TrHzw24YMO")
+project = rf.workspace().project("skin-disease-rdias")
+model = project.version(1).model
 
 
-# Model
-model_name = "google/vit-base-patch16-224"
-model = ViTForImageClassification.from_pretrained(model_name)
-processor = ViTImageProcessor.from_pretrained(model_name)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model.to(device)
+# Disease Info Dictionary
+skin_info = {
+    "Acne": {
+        "cause": "Blocked hair follicles from oil and dead skin cells.",
+        "home_remedies": ["Gentle cleansing", "Tea tree oil", "Aloe vera"],
+        "treatment": "Topical creams, retinoids, antibiotics if severe."
+    },
+    "Chickenpox": {
+        "cause": "Varicella-zoster virus infection.",
+        "home_remedies": ["Oatmeal baths", "Calamine lotion", "Cool compresses"],
+        "treatment": "Antiviral medications and supportive care."
+    },
+    "Eczema": {
+        "cause": "Overactive immune response to irritants.",
+        "home_remedies": ["Moisturize frequently", "Avoid triggers", "Use oatmeal baths"],
+        "treatment": "Steroid creams, antihistamines, avoiding allergens."
+    },
+    "Psoriasis": {
+        "cause": "Autoimmune condition speeding up skin cell turnover.",
+        "home_remedies": ["Aloe vera", "Oatmeal baths", "Coconut oil"],
+        "treatment": "Topical steroids, light therapy, immunosuppressants."
+    },
+    "Monkeypox": {
+        "cause": "Monkeypox virus (Orthopoxvirus family).",
+        "home_remedies": ["Hydration", "Calamine lotion", "Rest"],
+        "treatment": "Antivirals and supportive care."
+    },
+    "Ringworm": {
+        "cause": "Fungal infection of the skin.",
+        "home_remedies": ["Tea tree oil", "Apple cider vinegar", "Coconut oil"],
+        "treatment": "Antifungal creams or oral antifungal medication."
+    },
+    "basal cell carcinoma": {
+        "cause": "Excessive sun exposure damaging DNA in skin cells.",
+        "home_remedies": ["None, medical attention required."],
+        "treatment": "Surgical removal, topical chemotherapy, radiation."
+    },
+    "vitiligo": {
+        "cause": "Loss of skin pigment due to autoimmune destruction of melanocytes.",
+        "home_remedies": ["Protect skin from sun", "Ginger juice", "Turmeric paste"],
+        "treatment": "Topical steroids, light therapy, depigmentation therapy."
+    },
+    "tinea-versicolor": {
+        "cause": "Overgrowth of yeast on the skin.",
+        "home_remedies": ["Tea tree oil", "Coconut oil", "Apple cider vinegar"],
+        "treatment": "Antifungal shampoos and creams."
+    },
+    "warts": {
+        "cause": "Human Papillomavirus (HPV) infection.",
+        "home_remedies": ["Salicylic acid pads", "Duct tape method", "Banana peel rub"],
+        "treatment": "Cryotherapy, laser therapy, salicylic acid treatment."
+    },
+    "Pimple": {
+        "cause": "Blocked sebaceous glands by oil and dead skin.",
+        "home_remedies": ["Warm compress", "Honey mask", "Green tea extract"],
+        "treatment": "Cleansing, benzoyl peroxide, salicylic acid creams."
+    },
+    "Allergic Reaction": {
+        "cause": "Contact with allergens (foods, plants, chemicals).",
+        "home_remedies": ["Cold compress", "Aloe vera gel", "Oatmeal baths"],
+        "treatment": "Antihistamines, corticosteroid creams, avoidance."
+    },
+    "Mild Skin Rash (Non-specific)": {
+        "cause": "Heat, friction, or temporary skin irritation.",
+        "home_remedies": ["Cool compress", "Aloe vera", "Oatmeal bath"],
+        "treatment": "Usually resolves on its own, moisturizing helps."
+    },
+    "Other Causes": {
+        "cause": "Could be a rare skin condition or unknown issue.",
+        "home_remedies": ["Hydrate, avoid irritants", "Use mild moisturizers"],
+        "treatment": "Consult a dermatologist for accurate diagnosis."
+    }
+}
 
-def predict_condition(image_path):
-    image = Image.open(image_path).convert('RGB')
-    inputs = processor(images=image, return_tensors="pt").to(device)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    logits = outputs.logits
-    predicted_class_idx = logits.argmax(-1).item()
-    predicted_class = model.config.id2label[str(predicted_class_idx)]
-    return predicted_class
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def save_to_neo4j(image_name, disease, answers=None):
-    with driver.session() as session:
-        session.run("""
-            CREATE (r:Result {image: $image, disease: $disease, answers: $answers})
-        """, image=image_name, disease=disease, answers=str(answers) if answers else "")
+def classify_skin_condition(prediction_label, confidence):
+    threshold = 0.45  # Confidence cutoff
+    if confidence < threshold:
+        if "rash" in prediction_label.lower():
+            fallback_label = "Mild Skin Rash (Non-specific)"
+        elif "allergy" in prediction_label.lower():
+            fallback_label = "Allergic Reaction"
+        else:
+            fallback_label = "Other Causes"
+    else:
+        fallback_label = prediction_label
+    info = skin_info.get(fallback_label, skin_info["Other Causes"])
+    return fallback_label, info
 
-@app.route('/')
-def upload_page():
+@app.route('/skin_upload')
+def skin_upload():
     return render_template('skin_upload.html')
 
-@app.route('/skin_upload', methods=['POST'])
+@app.route('/upload', methods=['POST'])
 def upload_image():
-    file = request.files['image']
-    if file:
-        filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    if 'file' not in request.files:
+        return "No file uploaded", 400
+    file = request.files['file']
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
-        prediction = predict_condition(filepath)
+        session['image'] = filename
+        return redirect(url_for('questions'))
+    return 'File not allowed', 400
 
-        session['image_name'] = file.filename
-        session['prediction'] = prediction
-
-        save_to_neo4j(file.filename, prediction)  # Store initial prediction
-        return redirect(url_for('skin_questions'))
-    return 'No image uploaded.'
-
-@app.route('/skin_questions', methods=['GET', 'POST'])
-def questions_page():
+@app.route('/questions', methods=['GET', 'POST'])
+def questions():
     if request.method == 'POST':
-        answers = request.form.to_dict()
-        save_to_neo4j(session['image_name'], session['prediction'], answers)
-        return redirect(url_for('result_page'))
-    return render_template('skin_questions')
+        answers = {
+            'pain': request.form.get('pain'),
+            'itchy': request.form.get('itchy'),
+            'rash_type': request.form.get('rash_type'),
+            'duration': request.form.get('duration'),
+            'fever': request.form.get('fever'),
+            'allergen_contact': request.form.get('allergen_contact'),
+            'skin_type': request.form.get('skin_type'),
+            'previous_conditions': request.form.get('previous_conditions'),
+            'sun_exposure': request.form.get('sun_exposure'),
+            'skincare_products': request.form.get('skincare_products'),
+            'medication': request.form.get('medication')
+        }
+        session['answers'] = answers
 
-@app.route('/skin_result')
-def skin_result():
-    return render_template('skin_result.html', prediction=session.get('prediction'))
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], session['image'])
+        result = model.predict(image_path).json()
+
+        if result['predictions']:
+            raw_label = result['predictions'][0]['class']
+            confidence = result['predictions'][0]['confidence']
+        else:
+            raw_label = "Other Causes"
+            confidence = 0.0
+
+        label, info = classify_skin_condition(raw_label, confidence)
+
+        save_to_neo4j(session['image'], answers, label)
+
+        return render_template('skin_result.html', predicted_condition=label, info=info, confidence=confidence)
+    return render_template('skin_questions.html')
+
+def save_to_neo4j(filename, answers, predicted_condition):
+    with driver.session() as db_session:
+        query = """
+        MERGE (s:SkinCondition {image: $filename})
+        SET s += $answers,
+            s.predicted_condition = $predicted_condition
+        """
+        db_session.run(query, filename=filename, answers=answers, predicted_condition=predicted_condition)
 
 
 
-
-
-
+# ─── Main ──────────────────────────────────────────────────────────────────────
 if __name__ == '__main__':
     app.run(debug=True, port=5050)

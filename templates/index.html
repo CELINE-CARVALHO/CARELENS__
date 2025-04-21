@@ -62,21 +62,19 @@
 <section id="features" class="features reveal">
   <h2><i class="fas fa-cogs"></i> Key Features</h2>
   <div class="feature-grid">
-    <a href="{{ url_for('prescription') }}" class="card">
-      <img src="{{ url_for('static', filename='images/precription.jpeg') }}" alt="Prescription" />
+    <a href="{{ url_for('upload_prescription') }}" class="card">
+      <img src="{{ url_for('static', filename='images/precription.jpeg') }}" alt="upload_prescription" />
       <h3>Prescription Analysis</h3>
       <p>Scan and translate prescriptions in multiple languages.</p>
     </a>
-    <a href="{{ url_for('skin_upload_page') }}" class="card">
-      <img src="{{ url_for('static', filename='images/skin.jpeg') }}" alt="Skin" />
+    <a href="{{ url_for('skin_upload') }}" class="card">
+      <img src="{{ url_for('static', filename='images/skin.jpeg') }}" alt="skin_upload" />
       <h3>Skin Condition Detection</h3>
       <p>Upload images and get instant classification of conditions.</p>
     </a>
-    <a href="{{ url_for('pain_mapping') }}" class="card">
-      <img src="{{ url_for('static', filename='images/pain_map.jpeg') }}" alt="pain_mapping"/>
-      <h3>Pain Mapping</h3>
-      <p>Interactive diagram for pinpointing pain with AI insights.</p>
-    </a>
+    
+
+    
   </div>
 </section>
 

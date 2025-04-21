@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prescription Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f2f7fc;
+            color: #333;
+        }
+        h1 {
+            color: #0e76a8;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Prescription Extraction Result</h1>
+
+<div class="card">
+    <h2>Patient Info</h2>
+    <p><strong>Name:</strong> {{ data.patient_name }}</p>
+    <p><strong>Age:</strong> {{ data.patient_age }}</p>
+    <p><strong>Gender:</strong> {{ data.patient_gender }}</p>
+</div>
+
+<div class="card">
+    <h2>Doctor Info</h2>
+    <p><strong>Name:</strong> {{ data.doctor_name }}</p>
+    <p><strong>License Number:</strong> {{ data.doctor_license }}</p>
+    <p><strong>Date:</strong> {{ data.prescription_date }}</p>
+</div>
+
+<div class="card">
+    <h2>Medications</h2>
+    {% if data.medications %}
+        <ul>
+            {% for med in data.medications %}
+                <li>
+                    <strong>{{ med.medication_name }}</strong> — {{ med.dosage }}<br>
+                    <em>Uses:</em> {{ med.uses }}<br>
+                    <em>Side Effects:</em> {{ med.side_effects }}<br>
+                    <em>Info:</em> {{ med.information }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No medications found.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Additional Notes</h2>
+    <ul>
+        {% for note in data.additional_notes %}
+            <li>{{ note }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<p class="{{ 'success' if 'Successfully' in status_message else 'error' }}">{{ status_message }}</p>
+
+</body>
+</html>
+<!-- Compare this snippet from templates/upload_prescription.html: -->

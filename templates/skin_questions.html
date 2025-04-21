@@ -1,28 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Follow-up Questions</title>
+    <title>Answer Questions</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body>
-    <h2>Answer these questions:</h2>
+<body class="bg-light p-5">
+<div class="container">
+    <h2 class="mb-4">Tell us about your symptoms</h2>
     <form method="POST">
-        <p>Do you experience itching?</p>
-        <input type="radio" name="itching" value="Yes">Yes
-        <input type="radio" name="itching" value="No">No
-        <input type="radio" name="itching" value="Maybe">Maybe
-
-        <p>Is the skin area painful?</p>
-        <input type="radio" name="pain" value="Yes">Yes
-        <input type="radio" name="pain" value="No">No
-        <input type="radio" name="pain" value="Maybe">Maybe
-
-        <p>Does the affected area bleed?</p>
-        <input type="radio" name="bleed" value="Yes">Yes
-        <input type="radio" name="bleed" value="No">No
-        <input type="radio" name="bleed" value="Maybe">Maybe
-
-        <button type="submit">Submit</button>
+        <div class="mb-3">
+            <label>Is it painful?</label>
+            <select name="pain" class="form-select" required>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label>Is it itchy?</label>
+            <select name="itchy" class="form-select" required>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label>Describe the rash:</label>
+            <input type="text" name="rash_type" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>How long has it been present?</label>
+            <input type="text" name="duration" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Do you have a fever?</label>
+            <select name="fever" class="form-select" required>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label>Have you contacted any allergen recently?</label>
+            <input type="text" name="allergen_contact" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Your skin type:</label>
+            <input type="text" name="skin_type" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Previous skin conditions?</label>
+            <input type="text" name="previous_conditions" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Recent sun exposure?</label>
+            <input type="text" name="sun_exposure" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Are you using any skin care products?</label>
+            <input type="text" name="skincare_products" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Medications currently taken?</label>
+            <input type="text" name="medication" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-success">Predict Condition</button>
     </form>
+</div>
 </body>
 </html>
