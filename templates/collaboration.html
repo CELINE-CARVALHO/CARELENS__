@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CareLens Collaboration</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f7f9fb;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  header {
+    background-color: #0f1b31;
+    color: white;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.8rem;
+  }
+  main {
+    background: white;
+    max-width: 600px;
+    width: 90%;
+    margin: 40px 0;
+    padding: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 8px;
+  }
+  label {
+    display: block;
+    margin-top: 15px;
+    font-weight: 600;
+  }
+  input[type=text], input[type=email], select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 6px;
+    border: 1.5px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+  textarea {
+    min-height: 100px;
+  }
+  button {
+    background-color: #050b16;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    margin-top: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #091527;
+  }
+  .msg {
+    margin-top: 20px;
+    font-weight: 600;
+  }
+  footer {
+    margin-top: auto;
+    background: #061124;
+    color: white;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<header>CareLens - Collaborate With Us</header>
+
+<main>
+  <form id="collabForm">
+    <label for="name">Your Name *</label>
+    <input type="text" id="name" name="name" placeholder="John Doe" required />
+
+    <label for="email">Email Address *</label>
+    <input type="email" id="email" name="email" placeholder="john@example.com" required />
+
+    <label for="organization">Organization Name *</label>
+    <input type="text" id="organization" name="organization" placeholder="Hospital, NGO, Pharma Co." required />
+
+    <label for="type">Organization Type *</label>
+    <select id="type" name="type" required>
+      <option value="" disabled selected>Select type</option>
+      <option value="Hospital">Hospital</option>
+      <option value="Pharmaceutical Company">Pharmaceutical Company</option>
+      <option value="NGO">NGO</option>
+      <option value="Research Institute">Research Institute</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <label for="message">Message (Optional)</label>
+    <textarea id="message" name="message" placeholder="Tell us more about your interest or requirements..."></textarea>
+
+    <button type="submit">Submit Collaboration Request</button>
+  </form>
+
+  <div class="msg" id="responseMsg"></div>
+</main>
+
+<footer>
+  &copy; 2025 CareLens. Contact us: support@carelens.com | Phone: +1 (800) 123-4567
+</footer>
+
+<script>
+  document.getElementById('collabForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const responseMsg = document.getElementById('responseMsg');
+    responseMsg.textContent = '';
+    const formData = {
+      name: e.target.name.value.trim(),
+      email: e.target.email.value.trim(),
+      organization: e.target.organization.value.trim(),
+      type: e.target.type.value,
+      message: e.target.message.value.trim(),
+    };
+
+    if (!formData.name || !formData.email || !formData.organization || !formData.type) {
+      responseMsg.style.color = 'red';
+      responseMsg.textContent = 'Please fill all required fields.';
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/collaborate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        responseMsg.style.color = 'green';
+        responseMsg.textContent = result.message || 'Collaboration saved successfully!';
+        e.target.reset();
+      } else {
+        responseMsg.style.color = 'red';
+        responseMsg.textContent = result.error || 'An error occurred.';
+      }
+    } catch (err) {
+      responseMsg.style.color = 'red';
+      responseMsg.textContent = 'Network error. Please try again later.';
+    }
+  });
+</script>
+</body>
+</html>

@@ -365,3 +365,85 @@ footer a {
 .sidebar-links a:hover {
   color: #90e0ef;
 }
+.auth-btn {
+  background-color: #008080;
+  color: #fff;
+  padding: 8px 14px;
+  margin-left: 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.auth-btn:hover {
+  background-color: #005f5f;
+}
+
+.auth-btn.register {
+  background-color: #004080;
+}
+
+.auth-btn.register:hover {
+  background-color: #002e5a;
+}
+
+@media (max-width: 768px) {
+  .hero-content {
+    margin-right: 0;
+    margin-left: 0;
+    text-align: center;
+  }
+
+  .feature-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .benefits-img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .benefit-text {
+    max-width: 100%;
+  }
+}
+@media (max-width: 480px) {
+  .hero-content h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero-content h2 {
+    font-size: 1.4rem;
+  }
+
+  .hero-content p,
+  .hero-content ul li {
+    font-size: 1rem;
+  }
+
+  .card {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+}
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .sidebar-modern {
+    width: 200px;
+  }
+}
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+  }
+
+  .sidebar-modern {
+    width: 100%;
+  }
+} 
+

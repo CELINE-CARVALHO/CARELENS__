@@ -1,86 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Prescription Details</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 30px;
-            background: #f2f7fc;
-            color: #333;
-        }
-        h1 {
-            color: #0e76a8;
-        }
-        .card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        ul {
-            list-style-type: disc;
-            margin-left: 20px;
-        }
-        .success {
-            color: green;
-            font-weight: bold;
-        }
-        .error {
-            color: red;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prescription Details</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #1e293b;
+      color: #333;
+    }
+
+    header {
+      background-color: #0e76a8;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    main {
+      padding: 30px 5%;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 25px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    h2 {
+      color: #0e76a8;
+      margin-top: 0;
+    }
+
+    p, li {
+      line-height: 1.6;
+    }
+
+    ul {
+      list-style-type: disc;
+      margin-left: 20px;
+    }
+
+    .success {
+      color: #2e7d32;
+      font-weight: bold;
+      padding: 10px;
+      background: #e8f5e9;
+      border-left: 5px solid #2e7d32;
+      border-radius: 5px;
+    }
+
+    .error {
+      color: #c62828;
+      font-weight: bold;
+      padding: 10px;
+      background: #ffebee;
+      border-left: 5px solid #c62828;
+      border-radius: 5px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #0e76a8;
+      color: white;
+      margin-top: 40px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      main {
+        padding: 15px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<h1>Prescription Extraction Result</h1>
+  <header>
+    <h1>Prescription Extraction Result</h1>
+  </header>
 
-<div class="card">
-    <h2>Patient Info</h2>
-    <p><strong>Name:</strong> {{ data.patient_name }}</p>
-    <p><strong>Age:</strong> {{ data.patient_age }}</p>
-    <p><strong>Gender:</strong> {{ data.patient_gender }}</p>
-</div>
+  <main>
 
-<div class="card">
-    <h2>Doctor Info</h2>
-    <p><strong>Name:</strong> {{ data.doctor_name }}</p>
-    <p><strong>License Number:</strong> {{ data.doctor_license }}</p>
-    <p><strong>Date:</strong> {{ data.prescription_date }}</p>
-</div>
+    <div class="card">
+      <h2>Patient Info</h2>
+      <p><strong>Name:</strong> {{ data.patient_name }}</p>
+      <p><strong>Age:</strong> {{ data.patient_age }}</p>
+      <p><strong>Gender:</strong> {{ data.patient_gender }}</p>
+    </div>
 
-<div class="card">
-    <h2>Medications</h2>
-    {% if data.medications %}
+    <div class="card">
+      <h2>Doctor Info</h2>
+      <p><strong>Name:</strong> {{ data.doctor_name }}</p>
+      <p><strong>License Number:</strong> {{ data.doctor_license }}</p>
+      <p><strong>Date:</strong> {{ data.prescription_date }}</p>
+    </div>
+
+    <div class="card">
+      <h2>Medications</h2>
+      {% if data.medications %}
         <ul>
-            {% for med in data.medications %}
-                <li>
-                    <strong>{{ med.medication_name }}</strong> — {{ med.dosage }}<br>
-                    <em>Uses:</em> {{ med.uses }}<br>
-                    <em>Side Effects:</em> {{ med.side_effects }}<br>
-                    <em>Info:</em> {{ med.information }}
-                </li>
-            {% endfor %}
+          {% for med in data.medications %}
+            <li>
+              <strong>{{ med.medication_name }}</strong> — {{ med.dosage }}<br>
+              <em>Uses:</em> {{ med.uses }}<br>
+              <em>Side Effects:</em> {{ med.side_effects }}<br>
+              <em>Info:</em> {{ med.information }}
+            </li>
+          {% endfor %}
         </ul>
-    {% else %}
+      {% else %}
         <p>No medications found.</p>
-    {% endif %}
-</div>
+      {% endif %}
+    </div>
 
-<div class="card">
-    <h2>Additional Notes</h2>
-    <ul>
-        {% for note in data.additional_notes %}
+    <div class="card">
+      <h2>Additional Notes</h2>
+      {% if data.additional_notes %}
+        <ul>
+          {% for note in data.additional_notes %}
             <li>{{ note }}</li>
-        {% endfor %}
-    </ul>
-</div>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No additional notes provided.</p>
+      {% endif %}
+    </div>
 
-<p class="{{ 'success' if 'Successfully' in status_message else 'error' }}">{{ status_message }}</p>
+    <p class="{{ 'success' if 'Successfully' in status_message else 'error' }}">
+      {{ status_message }}
+    </p>
+
+  </main>
+
+  <footer>
+    &copy; 2025 CareLens – Your Health, Our Mission
+  </footer>
 
 </body>
 </html>
-<!-- Compare this snippet from templates/upload_prescription.html: -->

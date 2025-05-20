@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CareLens | Login</title>
+  <title>CareLens | Register</title>
   <style>
-    /* Same style as yours - no change except small fixes */
+    /* Same styles, fixed minor errors */
     * {
       margin: 0;
       padding: 0;
@@ -70,7 +70,7 @@
 
     .toggle-password {
       position: absolute;
-      right: 12px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
       cursor: pointer;
@@ -78,21 +78,16 @@
 
     .login-btn {
       width: 100%;
-      background: #36d1dc;
-      color: white;
-      border: none;
       padding: 12px;
       margin-top: 20px;
+      background-color: #5b86e5;
+      color: #fff;
+      border: none;
       border-radius: 8px;
-      font-size: 16px;
       cursor: pointer;
-      transition: 0.3s;
+      font-size: 16px;
     }
-
-    .login-btn:hover {
-      background: #2aadc5;
-    }
-
+    
     .divider {
       text-align: center;
       margin: 15px 0;
@@ -111,6 +106,7 @@
       font-weight: 500;
     }
   </style>
+
 </head>
 <body>
 
@@ -118,45 +114,62 @@
   <div class="login-card">
     <div class="logo-section">
       <img src="/static/images/logo.png" alt="CareLens logo with a stylized lens encircling a medical cross in blue and green, suggesting trust and innovation; logo is centered above the login form in a clean, welcoming interface" class="logo" />
-      <h2>Welcome to CareLens</h2>
-      <p>Your AI-powered healthcare assistant</p>
+      <h2>Create a CareLens Account</h2>
+      <p>Join us to access AI-powered healthcare</p>
     </div>
 
-    <form class="login-form" id="loginForm">
-      <label for="email">Email</label>
+    <form class="login-form" id="registerForm">
+      <label>Full Name</label>
+      <input type="text" id="name" placeholder="Enter your full name" required />
+
+      <label>Email</label>
       <input type="email" id="email" placeholder="Enter your email" required />
 
-      <label for="password">Password</label>
+      <label>Password</label>
       <div class="password-field">
-        <input type="password" id="password" placeholder="Enter your password" required />
-        <span class="toggle-password" onclick="togglePassword()">👁️</span>
+        <input type="password" id="password" placeholder="Create a password" required />
+        <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
       </div>
 
-      <button type="submit" class="login-btn">Login</button>
+      <label>Confirm Password</label>
+      <div class="password-field">
+        <input type="password" id="confirm-password" placeholder="Confirm your password" required />
+        <span class="toggle-password" onclick="togglePassword('confirm-password')">👁️</span>
+      </div>
+
+      <button type="submit" class="login-btn">Register</button>
 
       <p class="divider">or</p>
-      <p class="signup-link">Don't have an account? <a href="/signup">Sign up</a></p>
+
+      <p class="signup-link">Already have an account? <a href="/login">login </a></p>
     </form>
   </div>
 </div>
 
 <script>
-  document.getElementById("loginForm").addEventListener("submit", async event => {
+  document.getElementById("registerForm").addEventListener("submit", async event => {
     event.preventDefault();
 
+    const name  = document.getElementById("name").value;
     const email = document.getElementById("email").value;
     const pw    = document.getElementById("password").value;
+    const cpw   = document.getElementById("confirm-password").value;
+
+    if (pw !== cpw) {
+      alert("Passwords do not match!");
+      return;
+    }
 
     try {
-      const res = await fetch("/login", {
+      const res = await fetch("/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: pw })
+        body: JSON.stringify({ name, email, password: pw })
       });
       const result = await res.json();
       if (res.ok) {
         alert(result.message);
-        window.location.href = "/";
+        window.location.href = "/login";
       } else {
         alert(result.error);
       }

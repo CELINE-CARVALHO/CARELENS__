@@ -37,7 +37,10 @@
   <nav>
     <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
     <button id="darkModeToggle"><i class="fas fa-moon"></i></button>
+    <a href="{{ url_for('login') }}" class="auth-btn">Login</a>
+    <a href="{{ url_for('signup') }}" class="auth-btn register">Register</a>
   </nav>
+
 </header>
 
 <section class="hero">
@@ -54,7 +57,8 @@
         <li><i class="fas fa-check-circle"></i> Live Consultations</li>
         <li><i class="fas fa-check-circle"></i> Drug Interaction Checks</li>
       </ul>
-      <button class="cta">Talk to Us</button>
+      <button class="cta" onclick="window.location.href='/contact'">Talk to Us</button>
+
     </div>
   </div>
 </section>
@@ -72,6 +76,8 @@
       <h3>Skin Condition Detection</h3>
       <p>Upload images and get instant classification of conditions.</p>
     </a>
+   
+
     
 
     
@@ -112,7 +118,7 @@
 <section id="collab" class="collab reveal">
   <h2><i class="fas fa-users"></i> Collaboration</h2>
   <p>We’re working with hospitals, researchers, and developers. Join us in transforming healthcare.</p>
-  <button class="cta">Collaborate Now</button>
+  <button class="cta" onclick="window.location.href='/collaboration'">Collaborate Now</button>
 </section>
 
 <section id="contact" class="contact reveal">
